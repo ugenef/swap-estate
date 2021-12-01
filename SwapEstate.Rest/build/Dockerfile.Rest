@@ -1,0 +1,14 @@
+﻿FROM mcr.microsoft.com/dotnet/sdk:3.1-alpine AS build
+RUN mkdir src
+COPY ./ /src/
+RUN mkdir build && dotnet publish -c release -o /build /src/SevenSem.Rest/SevenSem.Rest.csproj
+FROM mcr.microsoft.com/dotnet/aspnet:3.1-alpine
+ARG TZ=Asia/Yekaterinburg
+RUN apk --update add tzdata && \
+    cp /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    apk del tzdata && \
+    mkdir app
+COPY --from=build /build/* /app/ 
+WORKDIR /app
+EXPOSE 80
+ENTRYPOINT ["dotnet","/app/SevenSem.Rest.dll"]
